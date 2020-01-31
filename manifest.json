@@ -1,0 +1,18 @@
+ {
+  "manifest_version": 2,
+  "applications": {
+    "gecko": {
+      "id": "copyfolder@sample.extensions.thunderbird.net",
+      "strict_min_version": "68.0"
+    }
+  },
+  "name": "Copy Folder Modified for TB ESR 68",
+  "description": "Right-click folder and copy it.",
+  "version": "2.2.2",
+  "icons": {
+    "64": "skin/images/copyfolder_64.png"
+  },
+  "legacy": {
+    "type": "xul"
+  }
+}

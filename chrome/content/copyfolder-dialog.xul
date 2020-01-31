@@ -1,0 +1,55 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin/global.css" type="text/css"?>
+<?xml-stylesheet type="text/css" href="chrome://messenger/skin/messenger.css"?>
+<!DOCTYPE overlay SYSTEM "chrome://copyfolder/locale/copyfolder-dialog.dtd">
+
+<dialog
+	xmlns:html="http://www.w3.org/1999/xhtml"
+	xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+	id="copyfolder-dialog"
+	title="&dialog_copyfolder.title;"
+	buttons="accept,cancel"
+	buttonlabelcancel="&dialog_button_cancel.label;"
+	buttonlabelaccept="&dialog_button_accept.label;"
+	onload="onLoad();">
+
+<script type="application/javascript">
+document.addEventListener("dialogaccept", function(event) { window.arguments[0].ok = true; close() || event.preventDefault(); } );
+document.addEventListener("dialogcancel", function(event) { close(); } );
+</script>
+	
+	<script><![CDATA[
+	function onLoad() {
+		if("arguments" in window && window.arguments.length > 0) {
+			var args = window.arguments[0];
+			args.callback(document, args);
+		}
+	}
+	]]></script>
+	
+	<html:div id="warning" style="max-width:450px;">
+		<vbox><html:div style='margin: 0 3px 2px 3px; background: #3D9EFE; padding: 5px 10px; border: solid 1px #0A88FE; color: #FFF;'>
+			The destination already contains a folder named "<html:span id="warning0" style='font-weight: bold;'></html:span>"
+		</html:div></vbox>
+	</html:div>
+			
+	<groupbox>
+		<hbox>
+			<label id="srcFolderLabel" value="&dialog_source_folder.label;" /> <label id="srcFolderInfo" />
+		</hbox>
+		<hbox>
+			<label id="destFolderLabel" value="&dialog_destination_folder.label;" /> <label id="destFolderInfo" />
+		</hbox>
+	</groupbox>
+	
+	<html:div id="question" style="max-width:450px;">
+				<vbox><label>
+				<html:div id='question0'>
+					 <html:span id='question01'></html:span> new messages from: <html:div id='question02' style='padding:5px 10px; font-weight:bold;'></html:div>
+					 to: <html:div id='question03' style='padding:5px 10px; font-weight:bold;'></html:div>
+				</html:div>
+				<html:div id='question1'>There are no new messages to <html:span id='question11'></html:span>.</html:div>
+				</label></vbox>
+	</html:div>
+		
+</dialog>
