@@ -35,7 +35,6 @@ com.crunchmod.copyfolder = {
 	 * @return void
 	 */
 	init: function() {
-                console.log("gds: in init()");
 		// remove onLoad listener and set attributes
 		window.removeEventListener('load', com.crunchmod.copyfolder.init, false);
 		com.crunchmod.copyfolder.statusBar = document.getElementById('statusbar-progresspanel');
@@ -71,32 +70,12 @@ com.crunchmod.copyfolder = {
 	 */
 	getMsgFolderFromUri: function(uri, checkFolderAttributes) {
 		let msgfolder = null;
-
-                //try {
-                //  msgFolder = // MailServices.folderLookup.getFolderForURL(uri);
-                //    com.crunchmod.copyfolder.FolderLookupService.getFolderForURL(uri);
-                //} catch(ex) {
-                 // console.log("gds: no folder lookup");
-                //}
-                //if (typeof msgFolder != 'undefined' && msgFolder) {
-                 // return msgFolder;
-                //}
-
                 var { MailUtils } = ChromeUtils.import("resource:///modules/MailUtils.jsm");
 
-                if (typeof MailUtils != 'undefined')
-                  console.log("gds: got MailUtils")
-
 		if (typeof MailUtils != 'undefined' && MailUtils.getExistingFolder) {
-			//return MailUtils.getExistingFolder(uri, checkFolderAttributes);
-                        // *** only has uri param? ***
-                        if (uri == null) console.log("gds: uri is knull, no use");
-                        console.log("gds: uri is " + uri);
 			msgFolder = MailUtils.getExistingFolder(uri);
-                        console.log("gds: msgFolder is " + msgFolder);
                         return msgFolder;
 		}
-                console.log("gds: no MailUtils.getExistingFolder ???")
 
 		try {
 			let resource = GetResourceFromUri(uri);
@@ -192,19 +171,22 @@ com.crunchmod.copyfolder = {
 	 * Shows confirmation dialog for a copy
 	 *
 	 * @param nsIMsgFolder Destination folder.
+	 * @param boolean true: copy selected folder and subfolders,
+         *                false: just copy selected folder without subfolders.
 	 * @return void
 	 */
-	copyDialog: function(destFolderSelected) {
+	copyDialog: function(destFolderSelected, treeCopy) {
 		// 複数回呼ばれるので回避策 == "workaround because it is called multiple times"
 		if (typeof( com.crunchmod.copyfolder.bRunning[destFolderSelected.URI] ) == "undefined" ) {
                     com.crunchmod.copyfolder.bRunning[destFolderSelected.URI] = 1;
-                    com.crunchmod.copyfolder.transferDialog(destFolderSelected, false);
+                    com.crunchmod.copyfolder.transferDialog(destFolderSelected, false, treeCopy);
 		}
 		return false;
 	},
 
 	/**
 	 * Shows confirmation dialog for a move
+         * Note: move is no yet implemented .
 	 *
 	 * @param nsIMsgFolder Destination folder.
 	 * @return void
@@ -218,14 +200,14 @@ com.crunchmod.copyfolder = {
 	 *
 	 * @param nsIMsgFolder Destination folder.
 	 * @param boolean is the transfer a move operation.
+	 * @param boolean is the transfer a full tree copy.
 	 * @return void
 	 */
-	transferDialog: function(destFolderSelected, move) {
+	transferDialog: function(destFolderSelected, move, treeCopy) {
 		let transfer = new com.crunchmod.copyfolder.transfer(
 			gFolderTreeView.getSelectedFolders()[0],
-			//com.crunchmod.copyfolder.getMsgFolderFromUri(destFolderSelected.getAttribute('id')),
 			com.crunchmod.copyfolder.getMsgFolderFromUri(destFolderSelected.URI),
-			move
+			move, treeCopy
 		);
 
 		transfer.calculateAndConfirm();
@@ -252,12 +234,14 @@ com.crunchmod.copyfolder = {
 	 * @param nsIMsgFolder srcFolder Folder to copy messages from.
 	 * @param nsIMsgFolder destFolder Folder to copy messages to.
 	 * @param boolean is the transfer a move operation.
+	 * @param boolean is the transfer a full tree copy.
 	 * @return transfer object
 	 */
-	transfer: function(srcFolder, destParent, move) {
+	transfer: function(srcFolder, destParent, move, treeCopy) {
 		var oSrcFolder = srcFolder;
 		var oDestParent = destParent;
 		var bMove = move;
+                var bTreeCopy = treeCopy;
 		var iSuccessCount = 0;
 		var iFailedCount = 0;
 		var iInflightCount = 0;
@@ -293,7 +277,7 @@ com.crunchmod.copyfolder = {
 
 		// TODO(steve): make these settings extension preferences
 		var iInflightMin = 5;
-		var iInflightMax = 10;
+		var iInflightMax = 15;  // try 15, orig is 10;
 		var iTransferWatchdogWarning = 300000; // 5m
 		var iTransferWatchdogRetry = 600000;   // 10m
 		var iTransferWatchdogAbort = 900000;   // 15m
@@ -563,7 +547,6 @@ com.crunchmod.copyfolder = {
 		 * @return void
 		 */
 		var compareFolderBatch = function(srcFolder, destFolder) {
-                  console.log("gds: who calls compareFolderBatch()?");
 			if (srcFolderEnumerator === null) {
 				try {
 				srcFolder.updateFolder(null);
@@ -664,7 +647,7 @@ com.crunchmod.copyfolder = {
 			if( destFolder != null )
 				console.log("sizeOnDisk: " + decodeURI( destFolder.folderURL ) + " " + destFolder.sizeOnDisk);
 
-			if (srcFolder.hasSubFolders) {
+			if (srcFolder.hasSubFolders && bTreeCopy) {
 				for (let subFolder of fixIterator(srcFolder.subFolders, Components.interfaces.nsIMsgFolder)) {
 					estimateFolders.call(this, subFolder, destFolder);
 				}
@@ -894,7 +877,9 @@ com.crunchmod.copyfolder = {
 					delete inflightMsgs[msgHdr.messageId];
 					if (Components.isSuccessCode(aStatus)) {
 						transferSuccess.call(transfer, msgHdr, destFolder);
+                                                console.log("gds: xfer good");
 					} else {
+                                                console.log("gds: xfer failed");
 						transferFailed.call(transfer, msgHdr, destFolder, aStatus);
 					}
 					setProgress.call(transfer);
@@ -1338,7 +1323,7 @@ com.crunchmod.copyfolder = {
 			let destFolder = destParent.getChildNamed(srcFolder.prettyName);
 			pendingFolders.push({srcFolder: srcFolder, destFolder: destFolder});
 
-			if (srcFolder.hasSubFolders) {
+			if (srcFolder.hasSubFolders && bTreeCopy) {
 				for (let subFolder of fixIterator(srcFolder.subFolders, Components.interfaces.nsIMsgFolder)) {
 					transferFolders.call(this, subFolder, destFolder);
 				}
