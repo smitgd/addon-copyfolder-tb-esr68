@@ -1,0 +1,19 @@
+<!ENTITY prefs_dialog_title "Copy Folder - Settings">
+<!ENTITY guide-url "http://not.yet.written/">
+<!ENTITY general_settings.tab_title "General Settings">
+<!ENTITY general_settings.recurse_copy.description "Choose recursive or non-recursive copy">
+<!ENTITY general_settings.recurse_copy.recurse.label "Copy source folder plus all subfolders">
+<!ENTITY general_settings.recurse_copy.recurse.accesskey "r">
+<!ENTITY general_settings.recurse_copy.do_not_recurse.label "Copy the source folder but no subfolders">
+<!ENTITY general_settings.recurse_copy.do_not_recurse.accesskey "n">
+<!ENTITY general_settings.do_not_copy_source_dups.label "Always does: Exclude duplicates in source from being copied">
+<!ENTITY general_settings.do_not_copy_source_dups.accesskey "d"> 
+<!ENTITY general_settings.do_not_add_destination_dups.label "Always does: Don't add duplicates to destination">
+<!ENTITY general_settings.do_not_add_destination_dups.accesskey "a"> 
+<!ENTITY general_settings.copy_only_messages_inside_folder.label "Never does: Copy only messages inside selected folder">
+<!ENTITY general_settings.copy_only_messages_inside_folder.accesskey "i"> 
+<!ENTITY parameters.tab_title "Detailed parameters">
+<!ENTITY parameters.placeholder.label "Dummy param - param settings to be added later">
+<!ENTITY parameters.placeholder.accesskey "p">
+<!ENTITY foldercopy-preftree-label "Copy Folder">
+<!ENTITY foldercopy-preftree-page-title "Copy Folder and its subfolders">

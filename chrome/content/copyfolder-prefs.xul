@@ -1,0 +1,83 @@
+<?xml version="1.0"?>
+
+<?xml-stylesheet href="chrome://global/skin/"?>
+<?xml-stylesheet href="chrome://messenger/skin/preferences/preferences.css"?>
+<?xml-stylesheet href="chrome://messenger/skin/messenger.css" type="text/css"?>
+
+<!DOCTYPE page SYSTEM "chrome://copyfolder/locale/copyfolder-prefs.dtd">
+
+<dialog xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+            id="copyfolderPrefsDialogTitle"
+            title="&prefs_dialog_title;"
+            dlgbuttons="accept,cancel">
+  <vbox id="copyfolderPrefPane"
+            helpURI="&guide-url;"
+            onpaneload="copyfolder.PrefPane.init();">
+
+    <script type="application/javascript" src="chrome://copyfolder/content/copyfolder-prefs.js"/>
+    <script type="application/javascript" src="chrome://global/content/preferencesBindings.js" />
+    <script type="application/javascript" src="chrome://copyfolder/content/copyfolder-set-preference-types.js" />
+
+
+    <tabbox id="prefsTabBox" flex="1" persist="selectedIndex">
+
+      <tabs id="prefsTabs">
+        <tab id="general_settings_tab"
+             label="&general_settings.tab_title;" />
+        <tab id="parameter_tab"
+             label="&parameters.tab_title;" />
+      </tabs>
+
+      <tabpanels flex="1">
+        <tabpanel id="general_settings_panel">
+          <vbox flex="1">
+            <groupbox>
+              <hbox class="groupbox-title"><label class="header">&general_settings.recurse_copy.description;</label></hbox>
+              <radiogroup preference="extensions.copyfolder.recurse_copy"
+                prefstring="extensions.copyfolder.recurse_copy"
+                id="extensions.copyfolder.recurse_copy">
+                <radio value="recurse"
+                  label="&general_settings.recurse_copy.recurse.label;"
+                  accesskey="&general_settings.recurse_copy.recurse.accesskey;"/>
+                <radio value="do_not_recurse"
+                  label="&general_settings.recurse_copy.do_not_recurse.label;"
+                  accesskey="&general_settings.recurse_copy.do_not_recurse.accesskey;"/>
+              </radiogroup>
+            </groupbox>
+            <checkbox preference="extensions.copyfolder.do_not_copy_source_dups"
+              prefstring="extensions.copyfolder.do_not_copy_source_dups"
+              id="extensions.copyfolder.do_not_copy_source_dups"
+              label="&general_settings.do_not_copy_source_dups.label;"
+              accesskey="&general_settings.do_not_copy_source_dups.accesskey;"
+              autostretch="never"/>
+            <checkbox preference="extensions.copyfolder.do_not_add_destination_dups"
+              prefstring="extensions.copyfolder.do_not_add_destination_dups"
+              id="extensions.copyfolder.do_not_add_destination_dups"
+              label="&general_settings.do_not_add_destination_dups.label;"
+              accesskey="&general_settings.do_not_add_destination_dups.accesskey;"
+              autostretch="never"/>
+            <checkbox preference="extensions.copyfolder.copy_only_messages_inside_folder"
+              prefstring="extensions.copyfolder.copy_only_messages_inside_folder"
+              id="extensions.copyfolder.copy_only_messages_inside_folder"
+              label="&general_settings.copy_only_messages_inside_folder.label;"
+              accesskey="&general_settings.copy_only_messages_inside_folder.accesskey;"
+              autostretch="never"/>
+            <spacer/>
+          </vbox>
+        </tabpanel>
+
+        <tabpanel id="parameters_panel" flex="1">
+          <vbox flex="1">
+            <!-- checkbox is just a placeholder, actually TBD -->
+            <checkbox preference="extensions.copyfolder.placeholder"
+              prefstring="extensions.copyfolder.placeholder"
+              id="extensions.copyfolder.placeholder"
+              label="&parameters.placeholder.label;"
+              accesskey="&parameters.placeholder.accesskey;"
+              autostretch="never"/>
+          </vbox>
+        </tabpanel>
+      </tabpanels>
+    </tabbox>
+  </vbox>
+</dialog>

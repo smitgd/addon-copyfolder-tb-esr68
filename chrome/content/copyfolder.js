@@ -12,23 +12,137 @@ if(!com) var com = {};
 if(!com.crunchmod) com.crunchmod = {};
 if(!com.crunchmod.copyfolder) com.crunchmod.copyfolder = {};
 
-        com.crunchmod.copyfolder.__defineGetter__("FolderLookupService", function() {
-          delete com.crunchmod.copyfolder.FolderLookupService;
-          return com.crunchmod.copyfolder.FolderLookupService =
-            Components.classes['@mozilla.org/mail/folder-lookup;1']
-                      .getService(Components.interfaces.nsIFolderLookupService);
-          });
+com.crunchmod.copyfolder.__defineGetter__("FolderLookupService", function() {
+  delete com.crunchmod.copyfolder.FolderLookupService;
+  return com.crunchmod.copyfolder.FolderLookupService =
+    Components.classes['@mozilla.org/mail/folder-lookup;1']
+              .getService(Components.interfaces.nsIFolderLookupService);
+  });
 
 
 ChromeUtils.import('resource:///modules/MailServices.jsm');
 ChromeUtils.import('resource:///modules/iteratorUtils.jsm');
 ChromeUtils.import("resource:///modules/folderUtils.jsm");
 
+const Cc = Components.classes;
+const Ci = Components.interfaces;
+
+if ("undefined" == typeof(messenger)) {
+  var messenger = Cc["@mozilla.org/messenger;1"].createInstance(Ci.nsIMessenger);
+}
+
+var CopyFolder = {};
+
+// Preferences
+// -----------
+
+CopyFolder.Prefs = {
+
+  // const
+  preferencePrefix : "extensions.copyfolder.",
+
+  _prefService: null,
+
+  get prefService()
+  {
+    if (!this._prefService)
+      this._prefService =
+        Components.classes["@mozilla.org/preferences-service;1"]
+                  .getService(Components.interfaces.nsIPrefBranch);
+    return this._prefService;
+  },
+
+  getBoolPref: function(prefName, defaultValue) {
+    try {
+      return this.prefService.getBoolPref(
+        CopyFolder.Prefs.preferencePrefix + prefName);
+    } catch(ex) {
+      if (defaultValue != undefined)
+        return defaultValue;
+
+      throw(ex);
+    }
+  },
+
+  getCharPref: function(prefName, defaultValue) {
+    try {
+      return this.prefService.getCharPref(
+        CopyFolder.Prefs.preferencePrefix + prefName);
+    } catch(ex) {
+      if (defaultValue) {
+        return defaultValue;
+      }
+      throw(ex);
+    }
+  },
+
+  getIntPref: function(prefName, defaultValue) {
+    try {
+      return this.prefService.getIntPref(
+        CopyFolder.Prefs.preferencePrefix + prefName);
+    } catch(ex) {
+      if (defaultValue)
+        return defaultValue;
+
+      throw(ex);
+    }
+  },
+
+  getLocalizedStringPref: function(prefName, defaultValue) {
+    try {
+      return this.prefService
+                 .getComplexValue(
+                   CopyFolder.Prefs.preferencePrefix +
+                   prefName,Components.interfaces.nsIPrefLocalizedString).data;
+    } catch(ex) {
+      if (defaultValue) {
+        return defaultValue;
+      }
+      throw(ex);
+    }
+  },
+
+  setBoolPref: function(prefName, val) {
+    this.prefService.setBoolPref(
+      CopyFolder.Prefs.preferencePrefix + prefName, val);
+  },
+
+  setCharPref: function(prefName, val) {
+    this.prefService.setCharPref(
+      CopyFolder.Prefs.preferencePrefix + prefName, val);
+  },
+
+  setIntPref: function(prefName, val) {
+    this.prefService.setIntPref(
+      CopyFolder.Prefs.preferencePrefix + prefName, val);
+  },
+
+  setAppStringPref: function(appPrefName, str) {
+      if (BiDiMailUI.App.versionIsAtLeast("58.0b1")) {
+        BiDiMailUI.Prefs.prefService.setStringPref(appPrefName, str);
+      }
+      else
+      {
+        BiDiMailUI.Prefs.prefService.setComplexValue(
+          appPrefName, Components.interfaces.nsISupportsString, str);
+      }
+  },
+
+  setLocalizedStringPref: function (prefName, val) {
+    var pls =
+      Components.classes["@mozilla.org/pref-localizedstring;1"]
+                .createInstance(Components.interfaces.nsIPrefLocalizedString);
+    pls.data = val;
+    setAppStringPref(CopyFolder.Prefs.preferencePrefix +
+          prefName, pls);
+  }
+}
 
 
 com.crunchmod.copyfolder = {
 	logLevel: 4, // 1: Error, 2: Warn, 3: Info, 4+: Debug
 	bRunning: {},		// oncommand関数がメニューの深さ回呼ばれるので回避用 == "preclude simultaneous copies to the destination folder"
+
 	/**
 	 * Initiates plugin
 	 *
@@ -40,6 +154,7 @@ com.crunchmod.copyfolder = {
 		com.crunchmod.copyfolder.statusBar = document.getElementById('statusbar-progresspanel');
 		com.crunchmod.copyfolder.progressMeter = document.getElementById('statusbar-icon');
 		com.crunchmod.copyfolder.copyfolderStatus = document.getElementById('copyfolder-status');
+
 
 		// create datasources for "Copy To" menuitem
 // ver 60 以降使えなくなった == "can no longer be used"
@@ -171,15 +286,13 @@ com.crunchmod.copyfolder = {
 	 * Shows confirmation dialog for a copy
 	 *
 	 * @param nsIMsgFolder Destination folder.
-	 * @param boolean true: copy selected folder and subfolders,
-         *                false: just copy selected folder without subfolders.
 	 * @return void
 	 */
-	copyDialog: function(destFolderSelected, treeCopy) {
+	copyDialog: function(destFolderSelected) {
 		// 複数回呼ばれるので回避策 == "workaround because it is called multiple times"
 		if (typeof( com.crunchmod.copyfolder.bRunning[destFolderSelected.URI] ) == "undefined" ) {
                     com.crunchmod.copyfolder.bRunning[destFolderSelected.URI] = 1;
-                    com.crunchmod.copyfolder.transferDialog(destFolderSelected, false, treeCopy);
+                    com.crunchmod.copyfolder.transferDialog(destFolderSelected, false);
 		}
 		return false;
 	},
@@ -200,15 +313,13 @@ com.crunchmod.copyfolder = {
 	 *
 	 * @param nsIMsgFolder Destination folder.
 	 * @param boolean is the transfer a move operation.
-	 * @param boolean is the transfer a full tree copy.
 	 * @return void
 	 */
-	transferDialog: function(destFolderSelected, move, treeCopy) {
+	transferDialog: function(destFolderSelected, move) {
 		let transfer = new com.crunchmod.copyfolder.transfer(
 			gFolderTreeView.getSelectedFolders()[0],
 			com.crunchmod.copyfolder.getMsgFolderFromUri(destFolderSelected.URI),
-			move, treeCopy
-		);
+			move);
 
 		transfer.calculateAndConfirm();
 	},
@@ -234,14 +345,14 @@ com.crunchmod.copyfolder = {
 	 * @param nsIMsgFolder srcFolder Folder to copy messages from.
 	 * @param nsIMsgFolder destFolder Folder to copy messages to.
 	 * @param boolean is the transfer a move operation.
-	 * @param boolean is the transfer a full tree copy.
 	 * @return transfer object
 	 */
-	transfer: function(srcFolder, destParent, move, treeCopy) {
+	transfer: function(srcFolder, destParent, move) {
 		var oSrcFolder = srcFolder;
 		var oDestParent = destParent;
 		var bMove = move;
-                var bTreeCopy = treeCopy;
+                var bTreeCopy = (CopyFolder.Prefs.getCharPref('recurse_copy',
+                                 'recurse') == 'recurse');
 		var iSuccessCount = 0;
 		var iFailedCount = 0;
 		var iInflightCount = 0;

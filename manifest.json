@@ -13,6 +13,10 @@
     "64": "skin/images/copyfolder_64.png"
   },
   "legacy": {
-    "type": "xul"
+    "type": "xul",
+    "options" : {
+      "page" : "chrome://copyfolder/content/copyfolder-prefs.xul",
+      "open_in_tab": false
+    }
   }
 }
