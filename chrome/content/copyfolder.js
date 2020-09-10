@@ -24,8 +24,8 @@ ChromeUtils.import('resource:///modules/MailServices.jsm');
 ChromeUtils.import('resource:///modules/iteratorUtils.jsm');
 ChromeUtils.import("resource:///modules/folderUtils.jsm");
 
-const Cc = Components.classes;
-const Ci = Components.interfaces;
+//const Cc = Components.classes;
+//const Ci = Components.interfaces;
 
 if ("undefined" == typeof(messenger)) {
   var messenger = Cc["@mozilla.org/messenger;1"].createInstance(Ci.nsIMessenger);
@@ -823,7 +823,7 @@ com.crunchmod.copyfolder = {
 				callback: com.crunchmod.copyfolder.dialog,
 			};
 
-			window.openDialog("chrome://copyfolder/content/copyfolder-dialog.xul", "copyfolder-dialog", "chrome, dialog, centerscreen, modal", params).focus();
+			window.openDialog("chrome://copyfolder/content/copyfolder-dialog.xhtml", "copyfolder-dialog", "chrome, dialog, centerscreen, modal", params).focus();
 
 			if (iSrcNewCount && params.ok) {
 				process.call(this);
@@ -1330,7 +1330,7 @@ com.crunchmod.copyfolder = {
 			com.crunchmod.copyfolder.logInfo(summary);
 
 			window.openDialog(
-				"chrome://copyfolder/content/copyfolder-summary.xul",
+				"chrome://copyfolder/content/copyfolder-summary.xhtml",
 				"copyfolder-summary",
 				"chrome, dialog, modal, centerscreen",
 				{status: status, summary: summaryDisplay}
