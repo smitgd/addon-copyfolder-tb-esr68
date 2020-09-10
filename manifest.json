@@ -10,7 +10,7 @@
   "description": "Right-click folder and copy it.",
   "version": "2.2.2",
   "icons": {
-    "64": "skin/images/copyfolder_64.png"
+    "64": "chrome/skin/images/copyfolder_64.png"
   },
   "experiment_apis": {
     "WindowListener": {
