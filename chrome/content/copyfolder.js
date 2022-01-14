@@ -21,7 +21,6 @@ com.crunchmod.copyfolder.__defineGetter__("FolderLookupService", function() {
 
 
 ChromeUtils.import('resource:///modules/MailServices.jsm');
-ChromeUtils.import('resource:///modules/iteratorUtils.jsm');
 ChromeUtils.import("resource:///modules/folderUtils.jsm");
 
 //const Cc = Components.classes;
@@ -363,6 +362,8 @@ com.crunchmod.copyfolder = {
 		var iRef = 0;
 		var iCompareFolderMissing = 0;
 		var copyService = null;
+		var copyFunctionName = null;
+		var copyOldWay = null; 
 		var notifyService = null;
 		var pendingFolderCreates = {};
 		var createdFolders = {};
@@ -471,7 +472,7 @@ com.crunchmod.copyfolder = {
 			// uniqueMsgEnumerator instead..
 			let cnt = uniqueMsgEnumerator(aFolder).msgTotal();
 			if (bRecurse && aFolder.hasSubFolders) {
-				for (let subFolder of fixIterator(aFolder.subFolders, Components.interfaces.nsIMsgFolder)) {
+				for (let subFolder of aFolder.subFolders) {
 					cnt += folderMessageCount(subFolder, bRecurse);
 				}
 			}
@@ -759,7 +760,7 @@ com.crunchmod.copyfolder = {
 				console.log("sizeOnDisk: " + decodeURI( destFolder.folderURL ) + " " + destFolder.sizeOnDisk);
 
 			if (srcFolder.hasSubFolders && bTreeCopy) {
-				for (let subFolder of fixIterator(srcFolder.subFolders, Components.interfaces.nsIMsgFolder)) {
+				for (let subFolder of srcFolder.subFolders) {
 					estimateFolders.call(this, subFolder, destFolder);
 				}
 			}
@@ -872,12 +873,17 @@ com.crunchmod.copyfolder = {
 		 * @return bool true if the transfer queued successfully false otherwise.
 		 */
 		var transferMessage = function(destFolder, msgHdr) {
-			let messages;
+			let messages;  // gds: actually only one message
 			try {
-				messages = Components.classes['@mozilla.org/array;1'].createInstance(Components.interfaces.nsIMutableArray);
-				messages.appendElement(msgHdr, false);
 				// We use copyService as nsIMsgFolder.copyMessages doesn't trigger the OnStopCopy callback.
-				copyService.CopyMessages(msgHdr.folder, messages, destFolder, bMove, copyListener(this, msgHdr, destFolder), null, false);
+                                if (!copyOldWay) {
+                                  messages = [];
+                                  messages.push(msgHdr);
+                                } else {
+                                  messages = Components.classes["@mozilla.org/array;1"].createInstance(Ci.nsIMutableArray);
+                                  messages.appendElement(msgHdr, false);
+                                }
+				copyService[copyFunctionName](msgHdr.folder, messages, destFolder, bMove, copyListener(this, msgHdr, destFolder), null, false);
 			} catch (ex) {
 				com.crunchmod.copyfolder.logError(
 					"CopyMessages call failed: msgHdr: " + msgHdr +
@@ -1435,7 +1441,7 @@ com.crunchmod.copyfolder = {
 			pendingFolders.push({srcFolder: srcFolder, destFolder: destFolder});
 
 			if (srcFolder.hasSubFolders && bTreeCopy) {
-				for (let subFolder of fixIterator(srcFolder.subFolders, Components.interfaces.nsIMsgFolder)) {
+				for (let subFolder of srcFolder.subFolders) {
 					transferFolders.call(this, subFolder, destFolder);
 				}
 			}
@@ -1465,7 +1471,13 @@ com.crunchmod.copyfolder = {
 		var process = function() {
 			com.crunchmod.copyfolder.setStatus('Processing ' + actionVerb() + " between " + folderPath(oSrcFolder) + " and " + folderPath(oDestParent) + "...");
 			copyService = Components.classes['@mozilla.org/messenger/messagecopyservice;1'].getService(Components.interfaces.nsIMsgCopyService);
-
+                        if ('copyMessages' in copyService) {
+                          copyFunctionName = 'copyMessages';
+                          copyOldWay = false;
+                        } else {
+                          copyFunctionName = 'CopyMessages';
+                          copyOldWay = true;
+                        }
 			notifyService = Components.classes["@mozilla.org/messenger/msgnotificationservice;1"].getService(Components.interfaces.nsIMsgFolderNotificationService);
     		notifyService.addListener(this, notifyService.folderAdded);
 

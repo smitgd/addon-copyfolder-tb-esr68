@@ -6,7 +6,7 @@
       "strict_min_version": "78.0"
     }
   },
-  "name": "Copy Folder Modified for TB ESR 78",
+  "name": "Copy Folder Modified for TB ESR >= 78",
   "description": "Right-click folder and copy it.",
   "version": "2.2.2",
   "icons": {
