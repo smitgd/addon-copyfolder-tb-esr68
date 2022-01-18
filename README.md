@@ -1,4 +1,4 @@
-# addon-copyfolder-tb-esr68
+# addon-copyfolder-tb-esr78-and-later
 Thunderbird addon Copyfolder modified for esr78 and later (branch WL)
 
 This copies a folder and its sub-folders (or optionally just the selected folder) to another location in the same account or to another account or to Local Folders, creating a new folder (and sub-folders if copied) of the same name at the destination. This addon never deletes the source folder or its sub-folders (i.e., "move" is not supported). This is mostly intended for copy between imap accounts but works with folders of any type of account.
