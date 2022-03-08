@@ -1167,16 +1167,18 @@ com.crunchmod.copyfolder = {
 			// Pre load destination folder in batches to avoid stalls
 			let batchCount = 0;
 			let msgHdr;
-			while (msgHdr = destFolderEnumerator.nextMsg()) {
-				// nextMsg can process more than it returns so use the count as the batch increment
-				batchCount += destFolderEnumerator.nextProcessedCnt();
-				if (batchCount >= iCompareBatchMax) {
-					com.crunchmod.copyfolder.setStatus('Transfer ' + folderPath(srcFolder) + ' loaded ' + destFolderEnumerator.msgCount() + ' target messages...');
-					scheduleBatch.call(this, transferFolderBatch, checkDone);
+                        if (destFolderEnumerator.msgCount() > 0) {
+                              while (msgHdr = destFolderEnumerator.nextMsg()) {
+                                      // nextMsg can process more than it returns so use the count as the batch increment
+                                      batchCount += destFolderEnumerator.nextProcessedCnt();
+                                      if (batchCount >= iCompareBatchMax) {
+                                              com.crunchmod.copyfolder.setStatus('Transfer ' + folderPath(srcFolder) + ' loaded ' + destFolderEnumerator.msgCount() + ' target messages...');
+                                              scheduleBatch.call(this, transferFolderBatch, checkDone);
 
-					return false;
-				}
-			}
+                                              return false;
+                                      }
+                              }
+                        }
 
 			batchCount = 0;
 			while ((msgHdr = srcFolderEnumerator.nextMsg()) && !bAborted) {
