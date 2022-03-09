@@ -994,7 +994,7 @@ com.crunchmod.copyfolder = {
 					delete inflightMsgs[msgHdr.messageId];
 					if (Components.isSuccessCode(aStatus)) {
 						transferSuccess.call(transfer, msgHdr, destFolder);
-                                                console.log("gds: xfer good");
+                                                //console.log("gds: xfer good");
 					} else {
                                                 console.log("gds: xfer failed");
 						transferFailed.call(transfer, msgHdr, destFolder, aStatus);
