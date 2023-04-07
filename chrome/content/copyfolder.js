@@ -21,7 +21,6 @@ com.crunchmod.copyfolder.__defineGetter__("FolderLookupService", function() {
 
 
 ChromeUtils.import('resource:///modules/MailServices.jsm');
-ChromeUtils.import("resource:///modules/folderUtils.jsm");
 
 //const Cc = Components.classes;
 //const Ci = Components.interfaces;
